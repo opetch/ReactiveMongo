@@ -9,6 +9,13 @@ resolvers ++= Seq(
 
 addSbtPlugin("com.typesafe.sbt" % "sbt-scalariform" % "1.3.0")
 
-addSbtPlugin("com.typesafe.sbt" % "sbt-git" % "0.8.4")
+//addSbtPlugin("com.typesafe.sbt" % "sbt-git" % "0.8.4")
 
 addSbtPlugin("com.eed3si9n" % "sbt-unidoc" % "0.3.3-dcdc4774d19d1500437bc63e79c3abb8f99bcdb4")
+
+resolvers += Resolver.url("hmrc-sbt-plugin-releases",
+  url("https://dl.bintray.com/hmrc/sbt-plugin-releases"))(Resolver.ivyStylePatterns)
+
+addSbtPlugin("uk.gov.hmrc" % "sbt-auto-build" % "0.9.0")
+
+addSbtPlugin("uk.gov.hmrc" % "sbt-git-versioning" % "0.8.0")

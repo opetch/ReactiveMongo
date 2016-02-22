@@ -1,9 +1,11 @@
 import sbt._
 import sbt.Keys._
+import uk.gov.hmrc.SbtAutoBuildPlugin
+import uk.gov.hmrc.versioning.SbtGitVersioning
 import scala.language.postfixOps
 
 object BuildSettings {
-  val buildVersion = "0.11.5"
+  //val buildVersion = "0.11.5"
 
   val filter = { (ms: Seq[(File, String)]) =>
     ms filter {
@@ -14,7 +16,7 @@ object BuildSettings {
 
   val buildSettings = Defaults.coreDefaultSettings ++ Seq(
     organization := "org.reactivemongo",
-    version := buildVersion,
+    //version := buildVersion,
     scalaVersion := "2.11.6",
     crossScalaVersions  := Seq("2.11.6", "2.10.4"),
     crossVersion := CrossVersion.binary,
@@ -23,44 +25,44 @@ object BuildSettings {
     scalacOptions ++= Seq("-unchecked", "-deprecation", "-target:jvm-1.6"),
     scalacOptions in (Compile, doc) ++= Seq("-unchecked", "-deprecation", "-diagrams", "-implicits", "-skip-packages", "samples"),
     scalacOptions in (Compile, doc) ++= Opts.doc.title("ReactiveMongo API"),
-    scalacOptions in (Compile, doc) ++= Opts.doc.version(buildVersion),
+    //scalacOptions in (Compile, doc) ++= Opts.doc.version(buildVersion),
     shellPrompt := ShellPrompt.buildShellPrompt,
     mappings in (Compile, packageBin) ~= filter,
     mappings in (Compile, packageSrc) ~= filter,
     mappings in (Compile, packageDoc) ~= filter) ++
-  Publish.settings ++ Travis.settings ++ Format.settings
+  Travis.settings ++ Format.settings
 }
 
-object Publish {
-
-  def targetRepository: Def.Initialize[Option[Resolver]] = Def.setting {
-    val nexus = "https://oss.sonatype.org/"
-    val snapshotsR = "snapshots" at nexus + "content/repositories/snapshots"
-    val releasesR  = "releases"  at nexus + "service/local/staging/deploy/maven2"
-    val resolver = if (isSnapshot.value) snapshotsR else releasesR
-    Some(resolver)
-  }
-
-  lazy val settings = Seq(
-    publishMavenStyle := true,
-    publishTo := targetRepository.value,
-    publishArtifact in Test := false,
-    pomIncludeRepository := { _ => false },
-    licenses := Seq("Apache 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
-    homepage := Some(url("http://reactivemongo.org")),
-    pomExtra := (
-      <scm>
-        <url>git://github.com/ReactiveMongo/ReactiveMongo.git</url>
-        <connection>scm:git://github.com/ReactiveMongo/ReactiveMongo.git</connection>
-      </scm>
-      <developers>
-        <developer>
-          <id>sgodbillon</id>
-          <name>Stephane Godbillon</name>
-          <url>http://stephane.godbillon.com</url>
-        </developer>
-      </developers>))
-}
+//object Publish {
+//
+//  def targetRepository: Def.Initialize[Option[Resolver]] = Def.setting {
+//    val nexus = "https://oss.sonatype.org/"
+//    val snapshotsR = "snapshots" at nexus + "content/repositories/snapshots"
+//    val releasesR  = "releases"  at nexus + "service/local/staging/deploy/maven2"
+//    val resolver = if (isSnapshot.value) snapshotsR else releasesR
+//    Some(resolver)
+//  }
+//
+//  lazy val settings = Seq(
+//    publishMavenStyle := true,
+//    publishTo := targetRepository.value,
+//    publishArtifact in Test := false,
+//    pomIncludeRepository := { _ => false },
+//    licenses := Seq("Apache 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
+//    homepage := Some(url("http://reactivemongo.org")),
+//    pomExtra := (
+//      <scm>
+//        <url>git://github.com/ReactiveMongo/ReactiveMongo.git</url>
+//        <connection>scm:git://github.com/ReactiveMongo/ReactiveMongo.git</connection>
+//      </scm>
+//      <developers>
+//        <developer>
+//          <id>sgodbillon</id>
+//          <name>Stephane Godbillon</name>
+//          <url>http://stephane.godbillon.com</url>
+//        </developer>
+//      </developers>))
+//}
 
 object Format {
   import com.typesafe.sbt.SbtScalariform._
@@ -109,8 +111,8 @@ object ShellPrompt {
     (state: State) =>
       {
         val currProject = Project.extract(state).currentProject.id
-        "%s:%s:%s> ".format(
-          currProject, currBranch, BuildSettings.buildVersion)
+        "%s:%s> ".format(
+          currProject, currBranch)
       }
   }
 }
@@ -157,6 +159,7 @@ object ReactiveMongoBuild extends Build {
       file("."),
       settings = buildSettings ++ (publishArtifact := false) ).
     settings(UnidocPlugin.unidocSettings: _*).
+    enablePlugins(SbtAutoBuildPlugin, SbtGitVersioning).
     aggregate(driver, bson, bsonmacros)
 
   lazy val driver = Project(
@@ -214,23 +217,8 @@ object Travis {
     val isJavaVersion = !isJavaAtLeast("1.7")
 
     if (isSnapshot && isTravisEnabled && isNotPR && isBranchAcceptable) {
-      println(s"publishing $thisRef from travis...")
+      println(s"not publishing in HMRC bulid.")
 
-      val newState = append(
-        Seq(
-          publishTo := Some("Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"),
-          credentials := Seq(Credentials(
-            "Sonatype Nexus Repository Manager",
-            "oss.sonatype.org",
-            sys.env.get("SONATYPE_USER").getOrElse(throw new RuntimeException("no SONATYPE_USER defined")),
-            sys.env.get("SONATYPE_PASSWORD").getOrElse(throw new RuntimeException("no SONATYPE_PASSWORD defined"))
-          ))),
-        state
-      )
-
-      runTask(publish in thisRef, newState)
-
-      println(s"published $thisRef from travis")
     } else {
       println(s"not publishing $thisRef to Sonatype: isSnapshot=$isSnapshot, isTravisEnabled=$isTravisEnabled, isNotPR=$isNotPR, isBranchAcceptable=$isBranchAcceptable, javaVersionLessThen_1_7=$isJavaVersion")
     }
