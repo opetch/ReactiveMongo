@@ -203,31 +203,8 @@ object Travis {
   val travisSnapshotBranches =
     SettingKey[Seq[String]]("branches that can be published on sonatype")
 
-  val travisCommand = Command.command("publishSnapshotsFromTravis") { state =>
-    val extracted = Project extract state
-    import extracted._
-    import scala.util.Properties.isJavaAtLeast
-
-    val thisRef = extracted.get(thisProjectRef)
-
-    val isSnapshot = getOpt(version).exists(_.endsWith("SNAPSHOT"))
-    val isTravisEnabled = sys.env.get("TRAVIS").exists(_ == "true")
-    val isNotPR = sys.env.get("TRAVIS_PULL_REQUEST").exists(_ == "false")
-    val isBranchAcceptable = sys.env.get("TRAVIS_BRANCH").exists(branch => getOpt(travisSnapshotBranches).exists(_.contains(branch)))
-    val isJavaVersion = !isJavaAtLeast("1.7")
-
-    if (isSnapshot && isTravisEnabled && isNotPR && isBranchAcceptable) {
-      println(s"not publishing in HMRC bulid.")
-
-    } else {
-      println(s"not publishing $thisRef to Sonatype: isSnapshot=$isSnapshot, isTravisEnabled=$isTravisEnabled, isNotPR=$isNotPR, isBranchAcceptable=$isBranchAcceptable, javaVersionLessThen_1_7=$isJavaVersion")
-    }
-
-    state
-  }
-
   val settings = Seq(
     Travis.travisSnapshotBranches := Seq("master"),
-    commands += Travis.travisCommand)
+    commands)
   
 }
