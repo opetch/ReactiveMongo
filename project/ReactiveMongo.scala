@@ -15,7 +15,7 @@ object BuildSettings {
   }
 
   val buildSettings = Defaults.coreDefaultSettings ++ Seq(
-    organization := "org.reactivemongo",
+    organization := "uk.gov.hmrc",
     //version := buildVersion,
     scalaVersion := "2.11.6",
     crossScalaVersions  := Seq("2.11.6", "2.10.4"),
