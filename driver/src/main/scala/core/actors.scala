@@ -716,6 +716,10 @@ trait MongoDBSystem extends Actor {
       if (node.pingInfo.lastIsMasterId == -1) {
         node.copy(pingInfo = node.pingInfo.copy(lastIsMasterTime = System.currentTimeMillis(), lastIsMasterId = id))
       }
+      else if (System.currentTimeMillis() - node.pingInfo.lastIsMasterTime >= PingInfo.pingTimeout) {
+        logger.debug(s"Haven't heard from ${node.toShortString} in a while... hope it's all cool")
+        node
+      }
       else if (node.pingInfo.lastIsMasterId >= PingInfo.pingTimeout) {
         node.copy(pingInfo = node.pingInfo.copy(lastIsMasterTime = System.currentTimeMillis(), lastIsMasterId = id, ping = Long.MaxValue))
       }
