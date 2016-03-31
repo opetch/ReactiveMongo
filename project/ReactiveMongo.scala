@@ -2,6 +2,7 @@ import sbt._
 import sbt.Keys._
 import uk.gov.hmrc.SbtAutoBuildPlugin
 import uk.gov.hmrc.versioning.SbtGitVersioning
+import uk.gov.hmrc.gitstamp.GitStamp._
 import scala.language.postfixOps
 
 object BuildSettings {
@@ -30,7 +31,7 @@ object BuildSettings {
     mappings in (Compile, packageBin) ~= filter,
     mappings in (Compile, packageSrc) ~= filter,
     mappings in (Compile, packageDoc) ~= filter) ++
-  Travis.settings ++ Format.settings
+    Travis.settings ++ Format.settings
 }
 
 //object Publish {
@@ -105,15 +106,15 @@ object ShellPrompt {
 
   def currBranch = (
     ("git status -sb" lines_! devnull headOption)
-    getOrElse "-" stripPrefix "## ")
+      getOrElse "-" stripPrefix "## ")
 
   val buildShellPrompt = {
     (state: State) =>
-      {
-        val currProject = Project.extract(state).currentProject.id
-        "%s:%s> ".format(
-          currProject, currBranch)
-      }
+    {
+      val currProject = Project.extract(state).currentProject.id
+      "%s:%s> ".format(
+        currProject, currBranch)
+    }
   }
 }
 
@@ -137,7 +138,7 @@ object Dependencies {
   val log4j = Seq("org.apache.logging.log4j" % "log4j-api" % log4jVersion, "org.apache.logging.log4j" % "log4j-core" % log4jVersion)
 
   val shapelessTest = "com.chuusai" % "shapeless" % "2.0.0" %
-  Test cross CrossVersion.binaryMapped {
+    Test cross CrossVersion.binaryMapped {
     case "2.10" => "2.10.4"
     case x => x
   }
@@ -150,6 +151,7 @@ object ReactiveMongoBuild extends Build {
   import Resolvers._
   import Dependencies._
   import sbtunidoc.{ Plugin => UnidocPlugin }
+  import SbtAutoBuildPlugin.autoSourceHeader
 
   val projectPrefix = "ReactiveMongo"
 
@@ -157,16 +159,17 @@ object ReactiveMongoBuild extends Build {
     Project(
       s"$projectPrefix-Root",
       file("."),
-      settings = buildSettings ++ (publishArtifact := false) ).
-    settings(UnidocPlugin.unidocSettings: _*).
-    enablePlugins(SbtAutoBuildPlugin, SbtGitVersioning).
-    aggregate(driver, bson, bsonmacros)
+      settings = buildSettings ++ Seq(publishArtifact := false, autoSourceHeader := false) ).
+      settings(UnidocPlugin.unidocSettings: _*).
+      enablePlugins(SbtAutoBuildPlugin, SbtGitVersioning).
+      aggregate(driver, bson, bsonmacros)
 
   lazy val driver = Project(
     projectPrefix,
     file("driver"),
     settings = buildSettings ++ Seq(
       resolvers := resolversList,
+      autoSourceHeader := false,
       libraryDependencies ++= Seq(
         netty,
         akkaActor,
@@ -180,23 +183,25 @@ object ReactiveMongoBuild extends Build {
         type M = { def closeDriver(): Unit }
         val m: M = c.getField("MODULE$").get(null).asInstanceOf[M]
         m.closeDriver()
-      }))).dependsOn(bsonmacros)
+      }))).dependsOn(bsonmacros).enablePlugins(SbtAutoBuildPlugin, SbtGitVersioning)
+
 
   lazy val bson = Project(
     s"$projectPrefix-BSON",
     file("bson"),
-    settings = buildSettings).
-    settings(libraryDependencies += specs)
+    settings = buildSettings ++ Seq(autoSourceHeader := false)).
+    settings(libraryDependencies += specs).enablePlugins(SbtAutoBuildPlugin, SbtGitVersioning)
 
   lazy val bsonmacros = Project(
     s"$projectPrefix-BSON-Macros",
     file("macros"),
     settings = buildSettings ++ Seq(
+      SbtAutoBuildPlugin.autoSourceHeader := false,
       libraryDependencies +=
         "org.scala-lang" % "scala-compiler" % scalaVersion.value
     )).
     settings(libraryDependencies += specs).
-    dependsOn(bson)
+    dependsOn(bson).enablePlugins(SbtAutoBuildPlugin, SbtGitVersioning)
 }
 
 object Travis {
@@ -229,5 +234,5 @@ object Travis {
   val settings = Seq(
     Travis.travisSnapshotBranches := Seq("master"),
     commands += Travis.travisCommand)
-  
+
 }
