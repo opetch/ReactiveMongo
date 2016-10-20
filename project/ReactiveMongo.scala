@@ -130,7 +130,7 @@ object Dependencies {
 
   val akkaActor = "com.typesafe.akka" %% "akka-actor" % "2.3.6"
 
-  val iteratees = "com.typesafe.play" %% "play-iteratees" % "2.3.5"
+  val playIteratees = "com.typesafe.play" %% "play-iteratees" % "2.5.8"
 
   val specs = "org.specs2" %% "specs2-core" % "2.4.9" % "test"
 
@@ -173,7 +173,7 @@ object ReactiveMongoBuild extends Build {
       libraryDependencies ++= Seq(
         netty,
         akkaActor,
-        iteratees,
+        playIteratees,
         commonsCodec,
         shapelessTest,
         specs) ++ log4j,
