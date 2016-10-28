@@ -6,7 +6,7 @@ import uk.gov.hmrc.gitstamp.GitStamp._
 import scala.language.postfixOps
 
 object BuildSettings {
-  //val buildVersion = "0.11.5"
+  val buildVersion = "0.12.0"
 
   val filter = { (ms: Seq[(File, String)]) =>
     ms filter {
@@ -17,7 +17,7 @@ object BuildSettings {
 
   val buildSettings = Defaults.coreDefaultSettings ++ Seq(
     organization := "uk.gov.hmrc",
-    //version := buildVersion,
+    version := buildVersion,
     scalaVersion := "2.11.6",
     crossScalaVersions  := Seq("2.11.6", "2.10.4"),
     crossVersion := CrossVersion.binary,
@@ -26,7 +26,7 @@ object BuildSettings {
     scalacOptions ++= Seq("-unchecked", "-deprecation", "-target:jvm-1.6"),
     scalacOptions in (Compile, doc) ++= Seq("-unchecked", "-deprecation", "-diagrams", "-implicits", "-skip-packages", "samples"),
     scalacOptions in (Compile, doc) ++= Opts.doc.title("ReactiveMongo API"),
-    //scalacOptions in (Compile, doc) ++= Opts.doc.version(buildVersion),
+    scalacOptions in (Compile, doc) ++= Opts.doc.version(buildVersion),
     shellPrompt := ShellPrompt.buildShellPrompt,
     mappings in (Compile, packageBin) ~= filter,
     mappings in (Compile, packageSrc) ~= filter,
