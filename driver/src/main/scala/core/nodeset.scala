@@ -1,20 +1,17 @@
 package reactivemongo.core.nodeset
 
-import java.io.FileInputStream
-import java.security.{ KeyStore, Security }
-import java.util.concurrent.{ Executor, Executors }
-import javax.net.ssl.{ KeyManagerFactory, TrustManager }
+import java.util.concurrent.{Executor, Executors}
+
+import akka.actor.ActorRef
+import org.jboss.netty.buffer.HeapChannelBufferFactory
+import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory
+import org.jboss.netty.channel.{Channel, ChannelPipeline, Channels}
+import reactivemongo.api.{MongoConnectionOptions, ReadPreference}
+import reactivemongo.bson.BSONDocument
+import reactivemongo.core.protocol.{MongoHandler, MongoWireVersion, Request, RequestEncoder, ResponseDecoder, ResponseFrameDecoder}
+import reactivemongo.utils.LazyLogger
 
 import scala.collection.generic.CanBuildFrom
-import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory
-import org.jboss.netty.buffer.HeapChannelBufferFactory
-import org.jboss.netty.channel.{ Channel, ChannelPipeline, Channels }
-import akka.actor.ActorRef
-import reactivemongo.utils.LazyLogger
-import reactivemongo.core.protocol.Request
-import reactivemongo.bson.BSONDocument
-import reactivemongo.core.protocol.{ MongoHandler, MongoWireVersion, RequestEncoder, ResponseDecoder, ResponseFrameDecoder }
-import reactivemongo.api.{ MongoConnectionOptions, ReadPreference }
 
 package object utils {
   def updateFirst[A, M[T] <: Iterable[T]](coll: M[A])(f: A => Option[A])(implicit cbf: CanBuildFrom[M[_], A, M[A]]): M[A] = {
@@ -352,7 +349,7 @@ class RoundRobiner[A, M[T] <: Iterable[T]](val subject: M[A], startAtIndex: Int 
 }
 
 class ChannelFactory(options: MongoConnectionOptions, bossExecutor: Executor = Executors.newCachedThreadPool, workerExecutor: Executor = Executors.newCachedThreadPool) {
-  import javax.net.ssl.{ KeyManager, SSLContext }
+  import javax.net.ssl.SSLContext
 
   private val logger = LazyLogger("reactivemongo.core.nodeset.ChannelFactory")
 
@@ -389,7 +386,7 @@ class ChannelFactory(options: MongoConnectionOptions, bossExecutor: Executor = E
   private def sslContext = {
     import java.io.FileInputStream
     import java.security.KeyStore
-    import javax.net.ssl.{ KeyManagerFactory, TrustManager }
+    import javax.net.ssl.{KeyManagerFactory, TrustManager}
 
     val keyManagers = Option(System.getProperty("javax.net.ssl.keyStore")).map { path =>
 
