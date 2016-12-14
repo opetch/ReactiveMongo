@@ -387,34 +387,47 @@ class ChannelFactory(options: MongoConnectionOptions, bossExecutor: Executor = E
   }
 
   private def sslContext = {
+    import java.io.FileInputStream
+    import java.security.KeyStore
+    import javax.net.ssl.{ KeyManagerFactory, TrustManager }
 
-    val keyManager: Array[KeyManager] = Option(System.getProperty("javax.net.ssl.keyStore")).map { path =>
+    val keyManagers = Option(System.getProperty("javax.net.ssl.keyStore")).map { path =>
 
-      val password = Option(System.getProperty("javax.net.ssl.keyStorePassword")).getOrElse("changeit")
+      val password = Option(System.getProperty("javax.net.ssl.keyStorePassword")).getOrElse("")
 
       val ks = {
         val res = KeyStore.getInstance("JKS")
+
         val fin = new FileInputStream(path)
-        res.load(fin, password.toCharArray)
+        try {
+          res.load(fin, password.toCharArray)
+        }
+        finally {
+          fin.close()
+        }
+
         res
       }
 
-      val algorithm = Option(Security.getProperty("ssl.KeyManagerFactory.algorithm")).getOrElse("SunX509")
-
       val kmf = {
-        val res = KeyManagerFactory.getInstance(algorithm)
+        val res = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm)
         res.init(ks, password.toCharArray)
         res
       }
 
-      kmf.getKeyManagers()
-    }.getOrElse(null)
-
-    val tm: Array[TrustManager] = if (options.sslAllowsInvalidCert) Array(TrustAny) else null
+      kmf.getKeyManagers
+    }
 
     val sslCtx = {
       val res = SSLContext.getInstance("SSL")
-      res.init(keyManager, tm, null)
+
+      val tm: Array[TrustManager] = if (options.sslAllowsInvalidCert) Array(TrustAny) else null
+
+      val rand = new scala.util.Random(System.identityHashCode(tm))
+      val seed = Array.ofDim[Byte](128)
+      rand.nextBytes(seed)
+
+      res.init(keyManagers.orNull, tm, new java.security.SecureRandom(seed))
       res
     }
 
