@@ -1,5 +1,7 @@
 #! /bin/bash
 
+set -e
+
 echo "[INFO] Clean some IVY cache"
 rm -rf "$HOME/.ivy2/local/org.reactivemongo"
 
@@ -89,9 +91,9 @@ mkdir /tmp/mongodb
 SSL_PASS=""
 
 if [ "$MONGO_PROFILE" = "self-ssl" -o "$MONGO_PROFILE" = "mutual-ssl" ]; then
-    SSL_PASS=`uuidgen`
+    SSL_PASS="secret"
 
-    "$SCRIPT_DIR/genSslCert.sh"
+    "$SCRIPT_DIR/genSslCert.sh" $SSL_PASS
 
     cat >> /tmp/mongod.conf << EOF
   ssl:
