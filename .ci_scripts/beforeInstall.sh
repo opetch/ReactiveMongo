@@ -32,21 +32,25 @@ fi
 
 echo "Max connection: $MAX_CON"
 
-# OpenSSL
-if [ ! -L "$HOME/ssl/lib/libssl.so.1.0.0" ]; then
-  cd /tmp
-  curl -s -o - https://www.openssl.org/source/openssl-1.0.1s.tar.gz | tar -xzf -
-  cd openssl-1.0.1s
-  rm -rf "$HOME/ssl" && mkdir "$HOME/ssl"
-  ./config -shared enable-ssl2 --prefix="$HOME/ssl" > /dev/null
-  make depend > /dev/null
-  make install > /dev/null
-else
-  rm -f "$HOME/ssl/lib/libssl.so.1.0.0" "libcrypto.so.1.0.0"
-fi
+if [ "$MONGO_PROFILE" = "self-ssl" -o "$MONGO_PROFILE" = "mutual-ssl" ]; then
 
-ln -s "$HOME/ssl/lib/libssl.so.1.0.0" "$HOME/ssl/lib/libssl.so.10"
-ln -s "$HOME/ssl/lib/libcrypto.so.1.0.0" "$HOME/ssl/lib/libcrypto.so.10"
+  # OpenSSL
+  if [ ! -L "$HOME/ssl/lib/libssl.so.1.0.0" ]; then
+    cd /tmp
+    curl -s -o - https://www.openssl.org/source/openssl-1.0.1s.tar.gz | tar -xzf -
+    cd openssl-1.0.1s
+    rm -rf "$HOME/ssl" && mkdir "$HOME/ssl"
+    ./config -shared enable-ssl2 --prefix="$HOME/ssl" > /dev/null
+    make depend > /dev/null
+    make install > /dev/null
+  else
+    rm -f "$HOME/ssl/lib/libssl.so.1.0.0" "libcrypto.so.1.0.0"
+  fi
+
+  ln -s "$HOME/ssl/lib/libssl.so.1.0.0" "$HOME/ssl/lib/libssl.so.10"
+  ln -s "$HOME/ssl/lib/libcrypto.so.1.0.0" "$HOME/ssl/lib/libcrypto.so.10"
+
+fi
 
 export LD_LIBRARY_PATH="$HOME/ssl/lib:$LD_LIBRARY_PATH"
 
