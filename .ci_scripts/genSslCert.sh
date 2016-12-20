@@ -25,3 +25,5 @@ openssl req -new -x509 -days 365 -out $SCRIPT_DIR/client-cert.crt -keyout $SCRIP
 
 
 cat "$SCRIPT_DIR/client-cert.key" "$SCRIPT_DIR/client-cert.crt" > "$SCRIPT_DIR/client.pem"
+
+openssl pkcs12 -export -out $SCRIPT_DIR/keystore.p12 -inkey $SCRIPT_DIR/client.pem -in $SCRIPT_DIR/client.pem

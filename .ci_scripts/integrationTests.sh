@@ -69,7 +69,7 @@ if [ "$MONGO_PROFILE" = "self-ssl" -o "$MONGO_PROFILE" = "mutual-ssl" ]; then
     SBT_ARGS="$SBT_ARGS -Dtest.enableSSL=true"
 
     if [ "$MONGO_PROFILE" = "mutual-ssl" ]; then
-        # TODO: javax.net.ssl.keyStore
+        SBT_ARGS="$SBT_ARGS -Djavax.net.ssl.keyStore=/tmp/keystore.jks"
         SBT_ARGS="$SBT_ARGS -Djavax.net.ssl.keyStorePassword=$SSL_PASS"
         SBT_ARGS="$SBT_ARGS -Djavax.net.ssl.keyStoreType=JKS"
     fi

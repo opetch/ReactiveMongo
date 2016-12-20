@@ -112,7 +112,11 @@ EOF
     CAFile: $SCRIPT_DIR/client.pem
 EOF
 
-        # TODO: JKS https://blog.codecentric.de/en/2013/01/how-to-use-self-signed-pem-client-certificates-in-java/
+        keytool -importkeystore  -srcstoretype PKCS12 \
+            -srckeystore $SCRIPT_DIR/keystore.p12 \
+            -destkeystore /tmp/keystore.jks \
+            -storepass $SSL_PASS -srcstorepass $SSL_PASS
+
     fi
 fi
 
