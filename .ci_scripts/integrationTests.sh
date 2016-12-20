@@ -23,6 +23,7 @@ fi
 if [ "$MONGO_PROFILE" = "mutual-ssl" ]; then
     MONGOSHELL_OPTS="$MONGOSHELL_OPTS --ssl --sslCAFile $SCRIPT_DIR/server.pem"
     MONGOSHELL_OPTS="$MONGOSHELL_OPTS --sslPEMKeyFile $SCRIPT_DIR/client.pem"
+    MONGOSHELL_OPTS="$MONGOSHELL_OPTS --sslPEMKeyPassword $PASS"
 fi
 
 MONGOSHELL_OPTS="$MONGOSHELL_OPTS --eval"
