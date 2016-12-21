@@ -386,21 +386,21 @@ class ChannelFactory(options: MongoConnectionOptions, bossExecutor: Executor = E
   private def sslContext = {
     import java.io.FileInputStream
     import java.security.KeyStore
-    import javax.net.ssl.{KeyManagerFactory, TrustManager}
+    import javax.net.ssl.{ KeyManagerFactory, TrustManager }
 
     val keyManagers = Option(System.getProperty("javax.net.ssl.keyStore")).map { path =>
 
       val password = Option(System.getProperty("javax.net.ssl.keyStorePassword")).getOrElse("")
 
       val ks = {
-        val res = KeyStore.getInstance("JKS")
+        val ksType = Option(System.getProperty("javax.net.ssl.keyStoreType")).getOrElse("JKS")
+        val res = KeyStore.getInstance(ksType)
 
-        val fin = new FileInputStream(path)
+        val fis = new FileInputStream(path)
         try {
-          res.load(fin, password.toCharArray)
-        }
-        finally {
-          fin.close()
+          res.load(fis, password.toCharArray)
+        } finally {
+          fis.close()
         }
 
         res
