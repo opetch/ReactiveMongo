@@ -1,18 +1,26 @@
 package reactivemongo.core.actors
 
-import scala.concurrent.{ Future, Promise }
-
-import reactivemongo.core.commands.{
-  FailedAuthentication,
-  SuccessfulAuthentication
-}
-
+import scala.concurrent.{Future, Promise}
+import reactivemongo.core.commands.{FailedAuthentication, SuccessfulAuthentication}
 import reactivemongo.core.protocol.Response
-import reactivemongo.core.nodeset.{
-  Authenticate,
-  CrAuthenticating,
-  Connection,
-  ScramSha1Authenticating
+import reactivemongo.core.nodeset._
+
+private[reactivemongo] trait MongoX509Authentication { system: MongoDBSystem =>
+  import reactivemongo.core.commands.{X509Authenticate}
+
+  protected final def sendAuthenticate(connection: Connection, nextAuth: Authenticate): Connection = {
+    connection.send(X509Authenticate(nextAuth.user)(nextAuth.db).maker(RequestId.authenticate.next))
+
+    connection.copy(authenticating = Some(
+      X509Authenticating(nextAuth.db, nextAuth.user)
+    ))
+  }
+
+  protected val authReceive: Receive = {
+    case response: Response =>
+
+  }
+
 }
 
 private[reactivemongo] trait MongoCrAuthentication { system: MongoDBSystem =>
