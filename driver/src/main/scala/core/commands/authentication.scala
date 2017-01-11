@@ -314,6 +314,25 @@ object CrAuthenticate extends BSONCommandResultMaker[SuccessfulAuthentication] {
   }
 }
 
+case class X509Authenticate(user: String) extends Command[SuccessfulAuthentication] {
+
+  override def makeDocuments = BSONDocument(
+    "authenticate" -> BSONInteger(1),
+    "mechanism" -> BSONString("MONGODB-X509"),
+    "user" -> BSONString(user))
+
+  override val ResultMaker = X509Authenticate
+}
+final object X509Authenticate extends BSONCommandResultMaker[SuccessfulAuthentication] {
+  def parseResponse(response: Response): Either[CommandError, SuccessfulAuthentication] = apply(response)
+
+  def apply(document: BSONDocument) = {
+    CommandError.checkOk(document, Some("authenticate"), (doc, name) => {
+      FailedAuthentication(doc.getAs[BSONString]("errmsg").map(_.value).getOrElse(""), Some(doc))
+    }).toLeft(SilentSuccessfulAuthentication)
+  }
+}
+
 /** an authentication result */
 sealed trait AuthenticationResult
 

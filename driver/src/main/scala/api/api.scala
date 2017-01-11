@@ -480,6 +480,7 @@ object MongoConnection {
         case ((unsupported, result), kv) => kv match {
           case ("authSource", v)           => unsupported -> result.copy(authSource = Some(v))
 
+          case ("authMode", "x509")        => unsupported -> result.copy(authMode = X509Authentication)
           case ("authMode", "scram-sha1")  => unsupported -> result.copy(authMode = ScramSha1Authentication)
           case ("authMode", _)             => unsupported -> result.copy(authMode = CrAuthentication)
 
@@ -622,10 +623,13 @@ class MongoDriver(config: Option[Config] = None) {
   def connection(nodes: Seq[String], options: MongoConnectionOptions = MongoConnectionOptions(), authentications: Seq[Authenticate] = Seq.empty, name: Option[String] = None): MongoConnection = {
     def dbsystem: MongoDBSystem = options.authMode match {
       case ScramSha1Authentication =>
-        new StandardDBSystem(nodes, authentications, options)()
+        new StandardDBSystem(nodes, authentications, options)() with MongoScramSha1Authentication
+
+      case X509Authentication =>
+        new StandardDBSystem(nodes, authentications, options)() with MongoX509Authentication
 
       case _ =>
-        new LegacyDBSystem(nodes, authentications, options)()
+        new StandardDBSystem(nodes, authentications, options)() with MongoCrAuthentication
     }
 
     val props = Props(dbsystem)

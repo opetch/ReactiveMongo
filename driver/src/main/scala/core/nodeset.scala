@@ -1,14 +1,14 @@
 package reactivemongo.core.nodeset
 
-import java.util.concurrent.{Executor, Executors}
+import java.util.concurrent.{ Executor, Executors }
 
 import akka.actor.ActorRef
 import org.jboss.netty.buffer.HeapChannelBufferFactory
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory
-import org.jboss.netty.channel.{Channel, ChannelPipeline, Channels}
-import reactivemongo.api.{MongoConnectionOptions, ReadPreference}
+import org.jboss.netty.channel.{ Channel, ChannelPipeline, Channels }
+import reactivemongo.api.{ MongoConnectionOptions, ReadPreference }
 import reactivemongo.bson.BSONDocument
-import reactivemongo.core.protocol.{MongoHandler, MongoWireVersion, Request, RequestEncoder, ResponseDecoder, ResponseFrameDecoder}
+import reactivemongo.core.protocol.{ MongoHandler, MongoWireVersion, Request, RequestEncoder, ResponseDecoder, ResponseFrameDecoder }
 import reactivemongo.utils.LazyLogger
 
 import scala.collection.generic.CanBuildFrom
@@ -272,7 +272,7 @@ case class Authenticate(db: String, user: String, password: String) extends Auth
 }
 
 sealed trait Authenticating extends Authentication {
-  def password: String
+  override def toString: String = s"Authenticating($db, $user})"
 }
 
 case class CrAuthenticating(db: String, user: String, password: String, nonce: Option[String]) extends Authenticating {
@@ -296,10 +296,14 @@ object Authenticating {
       case ScramSha1Authenticating(db, user, pass, _, _, _, _, _) =>
         Some((db, user, pass))
 
+      case X509Authenticating(db, user) => Some((db, user, ""))
+
       case _ =>
         None
     }
 }
+
+case class X509Authenticating(db: String, user: String) extends Authenticating
 
 case class Authenticated(db: String, user: String) extends Authentication
 
@@ -399,7 +403,8 @@ class ChannelFactory(options: MongoConnectionOptions, bossExecutor: Executor = E
         val fis = new FileInputStream(path)
         try {
           res.load(fis, password.toCharArray)
-        } finally {
+        }
+        finally {
           fis.close()
         }
 

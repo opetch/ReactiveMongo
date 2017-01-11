@@ -777,19 +777,12 @@ trait MongoDBSystem extends Actor {
   }
 }
 
-final class LegacyDBSystem(
+abstract class StandardDBSystem(
   val seeds: Seq[String],
   val initialAuthenticates: Seq[Authenticate],
   val options: MongoConnectionOptions)(
     val channelFactory: ChannelFactory = new ChannelFactory(options))
-    extends MongoDBSystem with MongoCrAuthentication
-
-final class StandardDBSystem(
-  val seeds: Seq[String],
-  val initialAuthenticates: Seq[Authenticate],
-  val options: MongoConnectionOptions)(
-    val channelFactory: ChannelFactory = new ChannelFactory(options))
-    extends MongoDBSystem with MongoScramSha1Authentication
+    extends MongoDBSystem
 
 object MongoDBSystem {
   private[actors] val DefaultConnectionRetryInterval: Int = 2000 // milliseconds
